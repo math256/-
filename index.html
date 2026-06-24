@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ 초고퀄리티 한국사 마스터 챌린지 ⚡</title>
+    <style>
+        /* 폰트 및 네온 다크 테마 기본 세팅 */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', 'Noto Sans KR', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c20 0%, #15102a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #ffffff;
+        }
+
+        /* 메인 게임 카드 (글래스모피즘 스타일) */
+        .game-container {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: 10;
+            transition: all 0.5s ease;
+        }
+
+        /* 상단 점수판 및 헤더 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #00f2fe;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+
+        .stats {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ff007f;
+        }
+
+        /* 문제 출력부 */
+        .question-box {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: center;
+            min-height: 80px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* 보기 버튼 스타일 */
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .choice-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: #eeeeee;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 18px 25px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 14px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .choice-btn:hover {
+            background: rgba(0, 242, 254, 0.1);
+            border-color: #00f2fe;
+            color: #00f2fe;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 242, 254, 0.2);
+        }
+
+        /* 정답 및 오답 상태 연출 */
+        .choice-btn.correct {
+            background: linear-gradient(90deg, #00b09b, #96c93d) !important;
+            color: #fff !important;
+            border-color: transparent !important;
+            box-shadow: 0 0 20px rgba(0, 176, 155, 0.4);
+        }
+
+        .choice-btn.wrong {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b) !important;
+            color: #fff !important;
+            border-color: transparent !important;
+            box-shadow: 0 0 20px rgba(255, 65, 108, 0.4);
+        }
+
+        /* 설명 및 피드백 박스 */
+        .feedback-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            text-align: center;
+            margin-bottom: 25px;
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        /* 컨트롤 버튼 (다음/재시작) */
+        .action-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            color: #ffffff;
+            border: none;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 242, 254, 0.3);
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.01);
+        }
+
+        /* 배경 우주 장식용 부유 원들 */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(79, 172, 254, 0.1) 100%);
+            z-index: 1;
+            filter: blur(1px);
+        }
+        .circle1 { width: 300px; height: 300px; top: -10%; left: -10%; }
+        .circle2 { width: 400px; height: 400px; bottom: -15%; right: -10%; background: linear-gradient(135deg, rgba(255, 0, 127, 0.08) 0%, rgba(255, 75, 43, 0.08) 100%); }
+
+        /* 애니메이션 효과 키프레임 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="circle circle1"></div>
+    <div class="circle circle2"></div>
+
+    <div class="game-container">
+        <div class="header">
+            <div class="title" id="quiz-title">🇰🇷 한국사 능력 챌린지</div>
+            <div class="stats" id="score-board">SCORE: 000 | COMBO: 0</div>
+        </div>
+
+        <div class="question-box" id="question">
+            문제를 불러오는 중입니다...
+        </div>
+
+        <div class="choices-container" id="choices-box">
+            </div>
+
+        <div class="feedback-box" id="feedback">
+            오답 해설지 영역
+        </div>
+
+        <button class="action-btn" id="action-btn" onclick="handleActionClick()">다음 문제로 전진 ➡️</button>
+    </div>
+
+    <script>
+        // 초고퀄리티 역사 퀴즈 데이터베이스
+        const quizList = [
+            {
+                q: "Q. 다음 중 고구려의 전성기를 이끌었으며, 신라를 도와 왜구를 격퇴한 왕은 누구인가요?",
+                c: ["① 근초고왕", "② 광개토대왕", "③ 장수왕", "④ 무령왕"],
+                a: 1,
+                e: "🎯 정답은 ② 광개토대왕! 신라 내물왕의 구원 요청을 받아 왜구를 격퇴하고 신라에 대한 영향력을 강화하며 영토를 크게 넓혔습니다."
+            },
+            {
+                q: "Q. 조선 시대 최고 언론·감찰 부서 역할을 담당하며 왕권의 독주를 견제하던 '조선 삼사(三司)'가 아닌 관청은?",
+                c: ["① 사헌부", "② 사간원", "③ 홍문관", "④ 의정부"],
+                a: 3,
+                e: "🎯 정답은 ④ 의정부! 의정부는 정승들이 모여 나랏일을 결정하는 조선의 최고 '행정' 기관이며, 삼사는 사헌부·사간원·홍문관을 뜻합니다."
+            },
+            {
+                q: "Q. 1919년 일제 강점기 최대 규모의 민족 운동이자, 민족 자결 주의의 영향을 받아 대한민국 임시 정부 수립의 결정적 계기가 된 민족 운동은?",
+                c: ["① 3·1 운동", "② 6·10 만세 운동", "③ 광주 학생 항일 운동", "④ 임오군란"],
+                a: 0,
+                e: "🎯 정답은 ① 3·1 운동! 종교계와 학생들이 주축이 되어 전 세계에 독립 선언을 한 사건으로, 이 영향으로 상하이에 임시정부가 수립되었습니다."
+            }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let combo = 0;
+        let isAnswered = false;
+
+        const qEl = document.getElementById('question');
+        const cBox = document.getElementById('choices-box');
+        const fBox = document.getElementById('feedback');
+        const actBtn = document.getElementById('action-btn');
+        const scoreEl = document.getElementById('score-board');
+
+        // 첫 게임 세팅 시작
+        function initGame() {
+            currentIdx = 0;
+            score = 0;
+            combo = 0;
+            updateScoreBoard();
+            loadQuiz();
+        }
+
+        // 문제 로드 함수
+        function loadQuiz() {
+            isAnswered = false;
+            fBox.style.display = 'none';
+            actBtn.style.display = 'none';
+            cBox.innerHTML = '';
+
+            if(currentIdx < quizList.length) {
+                const currentQuiz = quizList[currentIdx];
+                qEl.innerText = currentQuiz.q;
+                qEl.style.animation = 'none';
+                qEl.offsetHeight; // 애니메이션 리셋용 트릭
+                qEl.style.animation = 'fadeIn 0.5s ease-out';
+
+                // 보기 생성
+                currentQuiz.c.forEach((choice, index) => {
+                    const button = document.createElement('button');
+                    button.classList.add('choice-btn');
+                    button.innerText = choice;
+                    button.onclick = () => checkAnswer(index, button);
+                    cBox.appendChild(button);
+                });
+            } else {
+                // 전 문제 클리어 시 연출
+                qEl.innerHTML = `🎉 대한민국 역사 마스터 완료! 🎉<br><br>최종 점수: <span style="color:#00f2fe">${score}점</span><br>수고하셨습니다!`;
+                actBtn.innerText = "처음부터 다시 도전하기 🔄";
+                actBtn.style.display = 'block';
+            }
+        }
+
+        // 정답 검사 및 이펙트 연출
+        function checkAnswer(selectedIdx, clickedBtn) {
+            if(isAnswered) return; // 중복 클릭 차단
+            isAnswered = true;
+
+            const currentQuiz = quizList[currentIdx];
+            const allButtons = cBox.querySelectorAll('.choice-btn');
+
+            // 클릭 버튼 비활성화
+            allButtons.forEach(btn => btn.style.cursor = 'default');
+
+            if(selectedIdx === currentQuiz.a) {
+                // 정답일 때
+                combo++;
+                score += 100 + (combo * 10);
+                clickedBtn.classList.add('correct');
+                fBox.style.color = '#00ff7f';
+                fBox.innerText = "⭕ 정답... \n\n" + currentQuiz.e;
+            } else {
+                // 오답일 때
+                combo = 0;
+                clickedBtn.classList.add('wrong');
+                allButtons[currentQuiz.a].classList.add('correct'); // 정답 힌트 보여주기
+                fBox.style.color = '#ff416c';
+                fBox.innerText = "❌ 오답!! \n\n" + currentQuiz.e;
+            }
+
+            updateScoreBoard();
+            
+            // 피드백 박스 노출 및 다음 버튼 활성화
+            fBox.style.display = 'block';
+            actBtn.innerText = "다음 문제로 전진 ➡️";
+            actBtn.style.display = 'block';
+        }
+
+        // 버튼 클릭 컨트롤 분기
+        function handleActionClick() {
+            if(currentIdx < quizList.length) {
+                currentIdx++;
+                loadQuiz();
+            } else {
+                initGame();
+            }
+        }
+
+        function updateScoreBoard() {
+            scoreEl.innerText = `SCORE: ${String(score).padStart(3, '0')} | COMBO: ${combo}`;
+        }
+
+        // 브라우저 켜지면 최초 실행
+        initGame();
+    </script>
+</body>
+</html>
