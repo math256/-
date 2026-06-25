@@ -326,3 +326,70 @@
             }
             showNextControls();
         }
+
+        function checkShortAnswer() {
+            if(isAnswered) return;
+            
+            const inputEl = document.getElementById('user-input');
+            const userAnswer = inputEl.value.trim();
+            if(!userAnswer) return;
+
+            isAnswered = true;
+            inputEl.disabled = true;
+            intBox.querySelector('.submit-btn').style.display = 'none';
+
+            const currentQuiz = quizList[currentIdx];
+
+            if(userAnswer === currentQuiz.a) {
+                combo++;
+                score += 100 + (combo * 10);
+                inputEl.style.background = 'rgba(0, 176, 155, 0.2)';
+                inputEl.style.borderColor = '#00b09b';
+                showFeedback(true, currentQuiz.e);
+            } else {
+                combo = 0;
+                inputEl.style.background = 'rgba(255, 65, 108, 0.2)';
+                inputEl.style.borderColor = '#ff416c';
+                showFeedback(false, `제출한 정답: ${userAnswer}\n\n정답은 [ ${currentQuiz.a} ] 입니다!\n\n${currentQuiz.e}`);
+            }
+            showNextControls();
+        }
+
+        function showFeedback(isCorrect, text) {
+            fBox.style.color = isCorrect ? '#00ff7f' : '#ff416c';
+            fBox.innerText = isCorrect ? "⭕ 정답입니다!\n\n" + text : "❌ 오답입니다!\n\n" + text;
+            fBox.style.display = 'block';
+            updateScoreBoard();
+        }
+
+        function showNextControls() {
+            actBtn.innerText = "다음 문제로 전진 ➡️";
+            actBtn.style.display = 'block';
+        }
+
+        function handleActionClick() {
+            if(currentIdx < quizList.length) {
+                currentIdx++;
+                loadQuiz();
+            } else {
+                initGame();
+            }
+        }
+
+        function updateScoreBoard() {
+            scoreEl.innerText = `SCORE: ${String(score).padStart(3, '0')} | COMBO: ${combo}`;
+        }
+
+        // 전역 엔터키 감지: 결과 해설창이 열린 상태에서 엔터를 치면 다음 문제로 넘어감
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (actBtn.style.display === 'block') {
+                    handleActionClick();
+                }
+            }
+        });
+
+        initGame();
+    </script>
+</body>
+</html>
