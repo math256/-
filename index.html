@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>한국사 퀴즈 & 실시간 순위표</title>
+    <title>한국사 퀴즈</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap');
         
@@ -250,7 +250,6 @@
     <div class="circle circle2"></div>
 
     <div class="main-wrapper">
-        <!-- 퀴즈 게임 영역 -->
         <div class="game-container">
             <div class="header">
                 <div class="title" id="quiz-title">🇰🇷 한국사 능력 챌린지</div>
@@ -262,7 +261,6 @@
             <button class="action-btn" id="action-btn" onclick="handleActionClick()">다음 문제로 전진 ➡️</button>
         </div>
 
-        <!-- 미니 순위표 영역 (Top 5 작게 표시) -->
         <div class="mini-leaderboard">
             <div class="leaderboard-title">🏆 실시간 랭킹 Top 5</div>
             <div class="leaderboard-list" id="leaderboard-list"></div>
@@ -270,7 +268,9 @@
     </div>
 
     <script>
-        // 기존 퀴즈 문제 데이터 세트 (간소화 표시, 원본 데이터 모두 포함되어 작동함)
+        // ⚠️여기에 본인의 구글 Apps Script 웹 앱 URL을 붙여넣으세요!
+        const SCRIPT_URL = '여기에_구글_웹앱_URL을_붙여넣으세요';
+
         const quizList = [
             {"type": "short", "q": "Q. 청동기 시대를 대표하는 무덤 양식으로, 큰 돌을 받쳐 세우거나 땅에 묻어 만든 선사 시대의 무덤은 무엇일까요?", "a": "고인돌", "e": "🎯 고인돌은 청동기 시대의 대표적인 무덤이야."},
             {"type": "short", "q": "Q. 단군왕검이 세운 우리나라 역사상 최초의 국가 이름은 무엇일까요?", "a": "고조선", "e": "🎯 고조선은 역사상 최초의 국가야."},
@@ -325,31 +325,29 @@
             }
         }
 
-        function initLeaderboard() {
-            const savedLeaderboard = localStorage.getItem('historyQuizRank');
-            if (savedLeaderboard) {
-                leaderboardData = JSON.parse(savedLeaderboard);
-            } else {
-                leaderboardData = [
-                    { name: "선덕여왕", score: 2500 },
-                    { name: "강감찬", score: 1800 },
-                    { name: "정약용", score: 1200 },
-                    { name: "김유신", score: 800 }
-                ];
-                saveLeaderboard();
-            }
-            renderLeaderboard();
+        // 구글 시트에서 전체 랭킹 실시간으로 로드
+        function loadLeaderboard() {
+            if (!SCRIPT_URL || SCRIPT_URL.includes('여기에_구글_웹앱')) return;
+
+            fetch(SCRIPT_URL)
+            .then(res => res.json())
+            .then(data => {
+                leaderboardData = data;
+                renderLeaderboard();
+            })
+            .catch(err => console.error("랭킹 로드 실패:", err));
         }
 
-        // 미니 순위표 크기를 고려하여 상위 5위까지만 표시하도록 관리
         function renderLeaderboard() {
             rankListEl.innerHTML = '';
+            // 높은 점수 순으로 정렬
             leaderboardData.sort((a, b) => b.score - a.score);
 
+            // 미니 순위표에는 상위 5명만 노출
             leaderboardData.slice(0, 5).forEach((player, idx) => {
                 const item = document.createElement('div');
                 item.classList.add('leaderboard-item', `rank-${idx + 1}`);
-                if(player.name === playerName) item.classList.add('current-player');
+                if (player.name === playerName) item.classList.add('current-player');
 
                 item.innerHTML = `
                     <div class="rank-badge">${idx + 1}</div>
@@ -360,16 +358,16 @@
             });
         }
 
-        function saveLeaderboard() {
-            localStorage.setItem('historyQuizRank', JSON.stringify(leaderboardData));
-        }
-
+        // 구글 시트로 점수 전송 (POST 요청)
         function updateLiveScore() {
-            const pData = leaderboardData.find(p => p.name === playerName);
-            if(pData) pData.score = score;
-            else leaderboardData.push({ name: playerName, score: score });
-            saveLeaderboard();
-            renderLeaderboard();
+            if (!SCRIPT_URL || SCRIPT_URL.includes('여기에_구글_웹앱')) return;
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ name: playerName, score: score })
+            })
+            .then(() => loadLeaderboard()) // 점수 반영 후 랭킹 새로고침
+            .catch(err => console.error("점수 전송 실패:", err));
         }
 
         function askPlayerName() {
@@ -408,10 +406,6 @@
             if(!val) return;
 
             playerName = val;
-            const existing = leaderboardData.find(p => p.name === playerName);
-            if(existing) existing.score = 0;
-            else leaderboardData.push({ name: playerName, score: 0 });
-
             initGame();
         }
 
@@ -421,7 +415,7 @@
             combo = 0;
             shuffleArray(quizList); 
             updateScoreBoard();
-            updateLiveScore();
+            updateLiveScore(); // 0점 상태로 구글 시트에 유저 생성 및 갱신
             loadQuiz();
         }
 
@@ -473,6 +467,7 @@
                 actBtn.innerText = "새로운 이름으로 다시 도전하기 🔄";
                 actBtn.style.display = 'block';
                 actBtn.focus();
+                updateLiveScore(); // 모든 문제가 끝난 후 최종 점수 확실하게 동기화
             }
         }
 
@@ -555,7 +550,10 @@
             }
         });
 
-        initLeaderboard();
+        // 초기에 랭킹 한번 당겨오고, 이후 5초마다 실시간 갱신(주기적인 폴링)
+        loadLeaderboard();
+        setInterval(loadLeaderboard, 5000);
+        
         askPlayerName();
     </script>
 </body>
